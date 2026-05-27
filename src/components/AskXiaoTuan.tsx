@@ -7,6 +7,7 @@ import mascotImg from "@/assets/xiaotuan-mascot.png";
 import QuickFillTemplate from "@/components/QuickFillTemplate";
 import ChatItineraryCard from "@/components/chat/ChatItineraryCard";
 import ChatRouteMap, { type MapPoint } from "@/components/chat/ChatRouteMap";
+import ArticleCard from "@/components/chat/ArticleCard";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarWidget } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
