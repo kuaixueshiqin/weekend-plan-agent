@@ -296,9 +296,13 @@ const AskXiaoTuan = () => {
                   <div className="flex items-start gap-2">
                     <img src={mascotImg} alt="小团" className="w-8 h-8 rounded-full shrink-0 mt-1" />
                     <div className="flex-1">
-                      <div className="bg-card rounded-2xl rounded-bl-md px-4 py-2.5 shadow-card border border-border prose prose-sm max-w-none">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
-                      </div>
+                      {/^\s*#\s/.test(msg.content) ? (
+                        <ArticleCard content={msg.content} />
+                      ) : (
+                        <div className="bg-card rounded-2xl rounded-bl-md px-4 py-2.5 shadow-card border border-border prose prose-sm max-w-none">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      )}
 
                       {/* View mode toggle for itinerary messages */}
                       {msg.itinerary && msg.itinerary.length > 0 && (
