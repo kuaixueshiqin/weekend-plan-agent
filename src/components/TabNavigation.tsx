@@ -9,39 +9,67 @@ interface TabNavigationProps {
 }
 
 const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "ask", label: "问小团", icon: MessageCircle },
-  { id: "guides", label: "攻略", icon: Compass },
-  { id: "itinerary", label: "行程", icon: Map },
-  { id: "profile", label: "我的", icon: User },
+  { id: "ask",       label: "问小团", icon: MessageCircle },
+  { id: "guides",    label: "攻略",   icon: Compass },
+  { id: "itinerary", label: "行程",   icon: Map },
+  { id: "profile",   label: "我的",   icon: User },
 ];
 
 const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) => {
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-[430px] bg-card border-t border-border backdrop-blur-sm bg-opacity-95">
-      <div className="flex items-center justify-around h-12 px-1">
+    <nav
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-[430px]"
+      style={{
+        background: "rgba(255,255,255,0.9)",
+        backdropFilter: "blur(20px) saturate(180%)",
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+        boxShadow: "0 -1px 0 rgba(0,0,0,0.06), 0 -8px 32px -8px rgba(0,0,0,0.08)",
+      }}
+    >
+      {/* safe area */}
+      <div className="flex items-center h-[56px] px-2">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg text-[10px] font-medium transition-colors ${
-                isActive ? "text-primary" : "text-muted-foreground"
-              }`}
+              className="relative flex-1 flex flex-col items-center justify-center gap-0.5 py-1 transition-all duration-200"
             >
+              {/* Active background pill */}
               {isActive && (
                 <motion.div
-                  layoutId="activeTab"
-                  className="absolute top-0 inset-x-0 mx-auto w-6 h-0.5 bg-primary rounded-full"
-                  transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
+                  layoutId="tabPill"
+                  className="absolute inset-x-1.5 inset-y-0 rounded-xl bg-primary/12"
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 />
               )}
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.label}</span>
+              <div className="relative z-10 flex flex-col items-center gap-0.5">
+                <motion.div
+                  animate={{ scale: isActive ? 1.08 : 1, y: isActive ? -1 : 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                >
+                  <tab.icon
+                    className="w-[22px] h-[22px] transition-colors duration-200"
+                    style={{
+                      color: isActive ? "hsl(43 100% 40%)" : "hsl(220 8% 56%)",
+                      strokeWidth: isActive ? 2.2 : 1.8,
+                    }}
+                  />
+                </motion.div>
+                <span
+                  className="text-[10px] font-medium transition-colors duration-200"
+                  style={{ color: isActive ? "hsl(43 100% 38%)" : "hsl(220 8% 56%)" }}
+                >
+                  {tab.label}
+                </span>
+              </div>
             </button>
           );
         })}
       </div>
+      {/* iPhone home indicator space */}
+      <div className="h-[env(safe-area-inset-bottom,0px)]" />
     </nav>
   );
 };

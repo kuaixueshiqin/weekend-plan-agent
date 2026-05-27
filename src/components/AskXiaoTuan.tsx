@@ -19,6 +19,7 @@ interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  streaming?: boolean;       // true while SSE is still in flight
   itinerary?: DayPlan[];
   routePoints?: MapPoint[];
   nearbyPoints?: MapPoint[];
@@ -177,9 +178,9 @@ const AskXiaoTuan = () => {
               setMessages((prev) => {
                 const last = prev[prev.length - 1];
                 if (last?.role === "assistant") {
-                  return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantContent } : m));
+                  return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantContent, streaming: true } : m));
                 }
-                return [...prev, { id: (Date.now() + 1).toString(), role: "assistant", content: assistantContent }];
+                return [...prev, { id: (Date.now() + 1).toString(), role: "assistant", content: assistantContent, streaming: true }];
               });
             }
           } catch {
@@ -189,21 +190,25 @@ const AskXiaoTuan = () => {
         }
       }
 
-      // After streaming done, try to parse itinerary
+      // After streaming done: mark streaming=false, then parse itinerary
       const parsed = parseItinerary(assistantContent);
-      if (parsed) {
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (last?.role === "assistant") {
-            return prev.map((m, i) =>
-              i === prev.length - 1
-                ? { ...m, itinerary: parsed.days, routePoints: parsed.routePoints, nearbyPoints: parsed.nearbyPoints }
-                : m
-            );
-          }
-          return prev;
-        });
-      }
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant") {
+          return prev.map((m, i) =>
+            i === prev.length - 1
+              ? {
+                  ...m,
+                  streaming: false,
+                  ...(parsed
+                    ? { itinerary: parsed.days, routePoints: parsed.routePoints, nearbyPoints: parsed.nearbyPoints }
+                    : {}),
+                }
+              : m
+          );
+        }
+        return prev;
+      });
     } catch (e) {
       console.error("Chat error:", e);
       setMessages((prev) => [
@@ -252,82 +257,144 @@ const AskXiaoTuan = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 scrollbar-hide">
+    <div className="flex flex-col h-full bg-background">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide">
         {messages.length === 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center pt-12">
-            <img src={mascotImg} alt="小团" className="w-24 h-24 mb-4" />
-            <h2 className="text-xl font-bold mb-2">你好，我是小团 👋</h2>
-            <p className="text-muted-foreground text-sm mb-6 text-center max-w-xs">告诉我你的旅行需求，我帮你智能规划行程！</p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center px-5 pt-14 pb-6"
+          >
+            {/* Hero mascot area */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.05 }}
+              className="relative mb-5"
+            >
+              <div className="w-20 h-20 rounded-[28px] bg-gradient-to-br from-primary/30 to-meituan-orange/20 flex items-center justify-center shadow-lg">
+                <img src={mascotImg} alt="小团" className="w-14 h-14 object-contain" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-meituan-green rounded-full border-2 border-white flex items-center justify-center">
+                <span className="text-white text-[9px] font-bold">AI</span>
+              </div>
+            </motion.div>
 
-            <button
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="text-center mb-6"
+            >
+              <h2 className="text-[22px] font-bold mb-1.5 tracking-tight">
+                你好，我是<span className="text-gradient-warm">小团</span> 👋
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed max-w-[260px] mx-auto">
+                告诉我你的旅行需求，我来帮你规划一份专属攻略
+              </p>
+            </motion.div>
+
+            {/* Quick fill button */}
+            <motion.button
+              initial={{ y: 8, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.15 }}
               onClick={() => setShowTemplate(true)}
-              className="flex items-center gap-2 px-4 py-2.5 mb-6 bg-accent text-accent-foreground rounded-full text-sm font-medium border border-primary/20 hover:bg-primary/10 transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 mb-6 rounded-full text-sm font-semibold border-2 border-primary/30 bg-primary/8 text-amber-700 hover:bg-primary/15 hover:border-primary/50 transition-all"
+              style={{ background: "hsl(43 100% 50% / 0.08)" }}
             >
               <SlidersHorizontal className="w-4 h-4" />
               快捷填写旅行需求
-            </button>
+            </motion.button>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
-              {suggestions.map((s) => (
-                <button
+            {/* Suggestion chips */}
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="w-full space-y-2.5"
+            >
+              <p className="text-xs text-muted-foreground font-medium mb-2 flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-primary" /> 热门出发
+              </p>
+              {suggestions.map((s, i) => (
+                <motion.button
                   key={s}
+                  initial={{ x: -8, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.22 + i * 0.06 }}
                   onClick={() => handleSend(s)}
-                  className="flex items-start gap-2 p-3 rounded-xl bg-card border border-border hover:border-primary hover:shadow-card transition-all text-left text-sm"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-card border border-border hover:border-primary/40 hover:shadow-card-hover transition-all text-left group"
+                  style={{ boxShadow: "var(--shadow-card)" }}
                 >
-                  <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <span>{s}</span>
-                </button>
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  </div>
+                  <span className="text-[13.5px] font-medium text-foreground/85 leading-snug">{s}</span>
+                </motion.button>
               ))}
-            </div>
+            </motion.div>
           </motion.div>
         )}
 
-        <AnimatePresence>
-          {messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`mb-4 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div className={`max-w-[90%] sm:max-w-[80%] ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-2.5" : ""}`}>
-                {msg.role === "assistant" && (
-                  <div className="flex items-start gap-2">
-                    <img src={mascotImg} alt="小团" className="w-8 h-8 rounded-full shrink-0 mt-1" />
-                    <div className="flex-1">
-                      {/^\s*#\s/.test(msg.content) ? (
-                        <ArticleCard content={msg.content} />
+        <div className="px-4 pt-3 pb-2">
+          <AnimatePresence>
+            {messages.map((msg) => (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                className={`mb-3 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                {msg.role === "user" ? (
+                  <div
+                    className="max-w-[82%] px-4 py-2.5 rounded-2xl rounded-br-sm text-sm font-medium leading-relaxed"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(43 100% 50%), hsl(33 95% 52%))",
+                      color: "hsl(30 20% 10%)",
+                      boxShadow: "0 2px 12px hsl(43 100% 50% / 0.3)",
+                    }}
+                  >
+                    {msg.content}
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2 max-w-[92%]">
+                    {/* Avatar */}
+                    <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-primary/25 to-meituan-orange/15 flex items-center justify-center shrink-0 mt-0.5 border border-primary/20">
+                      <img src={mascotImg} alt="小团" className="w-5 h-5 object-contain" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {!msg.streaming && /^\s*#\s/.test(msg.content) ? (
+                        <ArticleCard content={msg.content} onSuggestionClick={(text) => handleSend(text)} />
                       ) : (
-                        <div className="bg-card rounded-2xl rounded-bl-md px-4 py-2.5 shadow-card border border-border prose prose-sm max-w-none">
+                        <div
+                          className="bg-card rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed border border-border/70 prose prose-sm max-w-none"
+                          style={{ boxShadow: "var(--shadow-card)" }}
+                        >
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                       )}
 
-                      {/* View mode toggle for itinerary messages */}
+                      {/* View mode toggle */}
                       {msg.itinerary && msg.itinerary.length > 0 && (
                         <div className="mt-2">
-                          <div className="flex bg-muted rounded-lg p-0.5 mb-2">
+                          <div className="flex bg-muted rounded-xl p-0.5 mb-2 border border-border/50">
                             <button
                               onClick={() => setViewMode("list")}
-                              className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === "list" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${viewMode === "list" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                             >
                               <List className="w-3 h-3" /> 行程表
                             </button>
                             <button
                               onClick={() => setViewMode("map")}
-                              className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === "map" ? "bg-card shadow-sm" : "text-muted-foreground"}`}
+                              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${viewMode === "map" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                             >
                               <MapIcon className="w-3 h-3" /> 地图路线
                             </button>
                           </div>
-
                           {viewMode === "list" ? (
-                            <ChatItineraryCard
-                              days={msg.itinerary}
-                              onUpdate={(days) => handleUpdateItinerary(msg.id, days)}
-                              onAddToTrip={() => {}}
-                            />
+                            <ChatItineraryCard days={msg.itinerary} onUpdate={(days) => handleUpdateItinerary(msg.id, days)} onAddToTrip={() => {}} />
                           ) : (
                             <ChatRouteMap
                               routePoints={msg.routePoints || []}
@@ -342,42 +409,69 @@ const AskXiaoTuan = () => {
                     </div>
                   </div>
                 )}
-                {msg.role === "user" && <p className="text-sm">{msg.content}</p>}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* Typing indicator */}
+          {isTyping && messages[messages.length - 1]?.role !== "assistant" && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-2 mb-3"
+            >
+              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-primary/25 to-meituan-orange/15 flex items-center justify-center shrink-0 border border-primary/20">
+                <img src={mascotImg} alt="小团" className="w-5 h-5 object-contain" />
+              </div>
+              <div className="bg-card rounded-2xl rounded-tl-sm px-4 py-3 border border-border/70 flex items-center gap-1.5" style={{ boxShadow: "var(--shadow-card)" }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse-dot" />
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse-dot [animation-delay:0.2s]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse-dot [animation-delay:0.4s]" />
               </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {isTyping && !messages.some((m) => m.role === "assistant" && m.content === "") && messages[messages.length - 1]?.role !== "assistant" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-2 mb-4">
-            <img src={mascotImg} alt="小团" className="w-8 h-8 rounded-full shrink-0" />
-            <div className="bg-card rounded-2xl rounded-bl-md px-4 py-3 shadow-card border border-border flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-muted-foreground animate-pulse-dot" />
-              <span className="w-2 h-2 rounded-full bg-muted-foreground animate-pulse-dot [animation-delay:0.2s]" />
-              <span className="w-2 h-2 rounded-full bg-muted-foreground animate-pulse-dot [animation-delay:0.4s]" />
-            </div>
-          </motion.div>
-        )}
+          )}
+          {/* bottom padding so last message isn't hidden behind input bar */}
+          <div className="h-2" />
+        </div>
       </div>
 
-      {/* Input bar */}
-      <div className="border-t border-border bg-card px-4 py-3">
+      {/* ── Input bar ───────────────────────────────────────────────── */}
+      <div
+        className="border-t border-border/60 px-3 py-2.5"
+        style={{
+          background: "rgba(255,255,255,0.92)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+        }}
+      >
         {/* Date chip */}
-        {travelDate && (
-          <div className="flex items-center gap-1.5 mb-2">
-            <span className="flex items-center gap-1 bg-primary/10 text-primary text-xs px-2.5 py-1 rounded-full font-medium">
-              <Calendar className="w-3 h-3" />
-              {format(travelDate, "M月d日")}
-              <button onClick={() => setTravelDate(undefined)} className="ml-0.5 hover:text-primary/70"><X className="w-3 h-3" /></button>
-            </span>
-          </div>
-        )}
-        <div className="max-w-screen-lg mx-auto flex items-end gap-2">
+        <AnimatePresence>
+          {travelDate && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="flex items-center gap-1.5 mb-2 pt-0.5">
+                <span className="flex items-center gap-1.5 bg-primary/10 text-amber-700 text-xs px-3 py-1 rounded-full font-semibold border border-primary/20">
+                  <Calendar className="w-3 h-3" />
+                  {format(travelDate, "M月d日出发")}
+                  <button onClick={() => setTravelDate(undefined)} className="ml-0.5 hover:opacity-60 transition-opacity">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex items-end gap-2">
           {/* Date picker */}
           <Popover>
             <PopoverTrigger asChild>
-              <button className="shrink-0 w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center hover:bg-secondary transition-colors">
-                <Calendar className="w-5 h-5" />
+              <button className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all ${travelDate ? "bg-primary/15 text-amber-700" : "bg-muted text-muted-foreground hover:bg-secondary"}`}>
+                <Calendar className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -394,25 +488,37 @@ const AskXiaoTuan = () => {
           {/* Template button */}
           <button
             onClick={() => setShowTemplate(true)}
-            className="shrink-0 w-10 h-10 rounded-xl bg-muted text-muted-foreground flex items-center justify-center hover:bg-secondary transition-colors"
+            className="shrink-0 w-9 h-9 rounded-xl bg-muted text-muted-foreground flex items-center justify-center hover:bg-secondary transition-colors"
           >
-            <SlidersHorizontal className="w-5 h-5" />
+            <SlidersHorizontal style={{ width: 17, height: 17 }} />
           </button>
 
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-            placeholder="输入旅行需求，小团帮你规划..."
-            rows={1}
-            className="flex-1 resize-none rounded-xl border border-border bg-muted px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-          />
+          {/* Text input */}
+          <div className="flex-1 relative">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+              placeholder="告诉小团你想去哪儿..."
+              rows={1}
+              className="w-full resize-none rounded-2xl border border-border/80 bg-muted/70 px-4 py-2.5 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 placeholder:text-muted-foreground/60 transition-all"
+              style={{ minHeight: 40, maxHeight: 120 }}
+            />
+          </div>
+
+          {/* Send */}
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || isTyping}
-            className="shrink-0 w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 hover:bg-meituan-yellow-hover transition-colors"
+            className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all disabled:opacity-35"
+            style={{
+              background: input.trim() && !isTyping
+                ? "linear-gradient(135deg, hsl(43 100% 50%), hsl(33 95% 52%))"
+                : "hsl(var(--muted))",
+              boxShadow: input.trim() && !isTyping ? "0 2px 8px hsl(43 100% 50% / 0.35)" : "none",
+            }}
           >
-            <Send className="w-5 h-5" />
+            <Send style={{ width: 16, height: 16, color: input.trim() && !isTyping ? "hsl(30 20% 10%)" : "hsl(var(--muted-foreground))" }} />
           </button>
         </div>
       </div>
@@ -424,21 +530,28 @@ const AskXiaoTuan = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-foreground/50 flex items-end justify-center"
+            className="fixed inset-0 z-50 flex items-end justify-center"
+            style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
             onClick={() => setShowTemplate(false)}
           >
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25 }}
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-card rounded-t-2xl w-full max-w-[430px] max-h-[80vh] overflow-y-auto"
+              className="bg-card rounded-t-3xl w-full max-w-[430px] max-h-[82vh] overflow-y-auto"
+              style={{ boxShadow: "var(--shadow-modal)" }}
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-                <h3 className="font-bold text-base">快捷填写旅行需求</h3>
-                <button onClick={() => setShowTemplate(false)} className="p-1 rounded-lg hover:bg-muted">
-                  <X className="w-5 h-5" />
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-primary/15 flex items-center justify-center">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-amber-700" />
+                  </div>
+                  <h3 className="font-bold text-base">快捷填写旅行需求</h3>
+                </div>
+                <button onClick={() => setShowTemplate(false)} className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-secondary transition-colors">
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               <QuickFillTemplate onSubmit={handleTemplateSubmit} />
