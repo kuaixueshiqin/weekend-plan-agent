@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, SlidersHorizontal, X, Calendar, Map as MapIcon, List } from "lucide-react";
+import { Send, Sparkles, SlidersHorizontal, X, Map as MapIcon, List, MapPin, ChevronRight, Loader2, Menu, Search, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import mascotImg from "@/assets/xiaotuan-mascot.png";
+import mascotImg from "@/assets/zhoumoumiao-mascot.png";
 import QuickFillTemplate from "@/components/QuickFillTemplate";
 import ChatItineraryCard from "@/components/chat/ChatItineraryCard";
 import ChatRouteMap, { type MapPoint } from "@/components/chat/ChatRouteMap";
 import ArticleCard from "@/components/chat/ArticleCard";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarWidget } from "@/components/ui/calendar";
+import LocationPage from "@/components/LocationPage";
+import LocationPermissionModal from "@/components/LocationPermissionModal";
+import HistorySidebar from "@/components/HistorySidebar";
+import { useLocation } from "@/hooks/use-location";
 import { cn } from "@/lib/utils";
 import type { DayPlan } from "@/types/itinerary";
 
@@ -110,11 +112,24 @@ const AskXiaoTuan = () => {
   const [travelDate, setTravelDate] = useState<Date | undefined>();
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Location state
+  const { location, requestGPS, selectAddress } = useLocation();
+  const [showLocationPage, setShowLocationPage] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+
+  // Show permission modal when GPS is denied and no address selected
+  useEffect(() => {
+    if (location.status === "denied" && !location.fullAddress) {
+      setShowPermissionModal(true);
+    }
+  }, [location.status, location.fullAddress]);
+
   const suggestions = [
-    "杭州2天1夜，想吃本帮菜，住西湖附近",
-    "上海周末游，预算1000，带女朋友",
-    "成都3日美食之旅，不辣的也要有",
-    "北京故宫+长城2日经典路线",
+    "今天下午带5岁孩子出去玩，别太远，2-3小时",
+    "和老婆下午有空，想找个近的地方吃饭+逛逛",
+    "朋友聚会，找个下午能玩3小时的地方",
+    "周末带父母出去，轻松不累，附近就行",
   ];
 
   useEffect(() => {
@@ -256,8 +271,71 @@ const AskXiaoTuan = () => {
     );
   };
 
+  const handleLocationSelect = (name: string, detail: string) => {
+    selectAddress(name, detail);
+    setShowLocationPage(false);
+  };
+
+  const handlePermissionAllow = () => {
+    setShowPermissionModal(false);
+    requestGPS();
+  };
+
+  const handlePermissionManual = (name: string) => {
+    selectAddress(name, name);
+    setShowPermissionModal(false);
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
+      {/* ── Header bar (参考元宝图2) ── */}
+      <div
+        className="shrink-0 flex items-center justify-between px-4 pt-11 pb-2"
+        style={{ minHeight: 56 }}
+      >
+        {/* Left: menu + title + subtitle (地址) */}
+        <div className="flex items-center gap-2 min-w-0">
+          <button
+            onClick={() => setShowSidebar(true)}
+            className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-secondary transition-colors shrink-0"
+          >
+            <Menu className="w-[18px] h-[18px]" />
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold tracking-tight leading-tight">周末喵</h1>
+            <button
+              onClick={() => setShowLocationPage(true)}
+              className="flex items-center gap-0.5 group w-fit mt-0.5"
+            >
+              {location.status === "locating" ? (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  定位中…
+                </span>
+              ) : (
+                <>
+                  <MapPin className="w-3 h-3 text-meituan-orange" />
+                  <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[160px]">
+                    {location.displayName || "选择位置"}
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Right: search + settings */}
+        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+          <button className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-secondary transition-colors">
+            <Search className="w-[18px] h-[18px] text-foreground/70" />
+          </button>
+          <button className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-secondary transition-colors">
+            <Settings className="w-[18px] h-[18px] text-foreground/70" />
+          </button>
+        </div>
+      </div>
+
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide">
         {messages.length === 0 && (
           <motion.div
@@ -273,7 +351,7 @@ const AskXiaoTuan = () => {
               className="relative mb-5"
             >
               <div className="w-20 h-20 rounded-[28px] bg-gradient-to-br from-primary/30 to-meituan-orange/20 flex items-center justify-center shadow-lg">
-                <img src={mascotImg} alt="小团" className="w-14 h-14 object-contain" />
+                <img src={mascotImg} alt="周末喵" className="w-14 h-14 object-contain" />
               </div>
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-meituan-green rounded-full border-2 border-white flex items-center justify-center">
                 <span className="text-white text-[9px] font-bold">AI</span>
@@ -287,10 +365,10 @@ const AskXiaoTuan = () => {
               className="text-center mb-6"
             >
               <h2 className="text-[22px] font-bold mb-1.5 tracking-tight">
-                你好，我是<span className="text-gradient-warm">小团</span> 👋
+                你好，我是<span className="text-gradient-warm">周末喵</span> 🐱
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed max-w-[260px] mx-auto">
-                告诉我你的旅行需求，我来帮你规划一份专属攻略
+                告诉我今天想带谁去哪儿玩，我来帮你安排下午的活动
               </p>
             </motion.div>
 
@@ -304,7 +382,7 @@ const AskXiaoTuan = () => {
               style={{ background: "hsl(43 100% 50% / 0.08)" }}
             >
               <SlidersHorizontal className="w-4 h-4" />
-              快捷填写旅行需求
+              快捷填写出行需求
             </motion.button>
 
             {/* Suggestion chips */}
@@ -315,7 +393,7 @@ const AskXiaoTuan = () => {
               className="w-full space-y-2.5"
             >
               <p className="text-xs text-muted-foreground font-medium mb-2 flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3 text-primary" /> 热门出发
+                <Sparkles className="w-3 h-3 text-primary" /> 大家都在问
               </p>
               {suggestions.map((s, i) => (
                 <motion.button
@@ -362,9 +440,10 @@ const AskXiaoTuan = () => {
                   <div className="flex items-start gap-2 max-w-[92%]">
                     {/* Avatar */}
                     <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-primary/25 to-meituan-orange/15 flex items-center justify-center shrink-0 mt-0.5 border border-primary/20">
-                      <img src={mascotImg} alt="小团" className="w-5 h-5 object-contain" />
+                      <img src={mascotImg} alt="周末喵" className="w-5 h-5 object-contain" />
                     </div>
                     <div className="flex-1 min-w-0">
+
                       {!msg.streaming && /^\s*#\s/.test(msg.content) ? (
                         <ArticleCard content={msg.content} onSuggestionClick={(text) => handleSend(text)} />
                       ) : (
@@ -421,7 +500,7 @@ const AskXiaoTuan = () => {
               className="flex items-start gap-2 mb-3"
             >
               <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-primary/25 to-meituan-orange/15 flex items-center justify-center shrink-0 border border-primary/20">
-                <img src={mascotImg} alt="小团" className="w-5 h-5 object-contain" />
+                <img src={mascotImg} alt="周末喵" className="w-5 h-5 object-contain" />
               </div>
               <div className="bg-card rounded-2xl rounded-tl-sm px-4 py-3 border border-border/70 flex items-center gap-1.5" style={{ boxShadow: "var(--shadow-card)" }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-pulse-dot" />
@@ -435,74 +514,38 @@ const AskXiaoTuan = () => {
         </div>
       </div>
 
-      {/* ── Input bar ───────────────────────────────────────────────── */}
+      {/* ── Input bar ── fixed above tab bar, fused visually ── */}
       <div
-        className="border-t border-border/60 px-3 py-2.5"
+        className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-[430px] px-3 pt-2 pb-2 z-40"
         style={{
           background: "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
         }}
       >
-        {/* Date chip */}
-        <AnimatePresence>
-          {travelDate && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="flex items-center gap-1.5 mb-2 pt-0.5">
-                <span className="flex items-center gap-1.5 bg-primary/10 text-amber-700 text-xs px-3 py-1 rounded-full font-semibold border border-primary/20">
-                  <Calendar className="w-3 h-3" />
-                  {format(travelDate, "M月d日出发")}
-                  <button onClick={() => setTravelDate(undefined)} className="ml-0.5 hover:opacity-60 transition-opacity">
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div className="flex items-end gap-2">
-          {/* Date picker */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all ${travelDate ? "bg-primary/15 text-amber-700" : "bg-muted text-muted-foreground hover:bg-secondary"}`}>
-                <Calendar className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <CalendarWidget
-                mode="single"
-                selected={travelDate}
-                onSelect={setTravelDate}
-                disabled={(date) => date < new Date()}
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-
+        <div className="flex items-center gap-2">
           {/* Template button */}
           <button
             onClick={() => setShowTemplate(true)}
-            className="shrink-0 w-9 h-9 rounded-xl bg-muted text-muted-foreground flex items-center justify-center hover:bg-secondary transition-colors"
+            className={`shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
+              showTemplate
+                ? "bg-primary/15 text-amber-700"
+                : "bg-[hsl(220_8%_94%)] text-[hsl(220_8%_46%)] hover:bg-[hsl(220_8%_89%)]"
+            }`}
           >
             <SlidersHorizontal style={{ width: 17, height: 17 }} />
           </button>
 
-          {/* Text input */}
-          <div className="flex-1 relative">
+          {/* Pill input — fills remaining space */}
+          <div className="flex-1 flex items-center gap-2 rounded-[22px] bg-[hsl(220_8%_94%)] px-4 h-10">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              placeholder="告诉小团你想去哪儿..."
+              placeholder="今天下午想带谁去哪儿玩？"
               rows={1}
-              className="w-full resize-none rounded-2xl border border-border/80 bg-muted/70 px-4 py-2.5 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 placeholder:text-muted-foreground/60 transition-all"
-              style={{ minHeight: 40, maxHeight: 120 }}
+              className="flex-1 resize-none bg-transparent text-sm focus:outline-none placeholder:text-[hsl(220_8%_62%)] leading-tight py-0 self-center"
+              style={{ minHeight: 22, maxHeight: 88 }}
             />
           </div>
 
@@ -510,15 +553,15 @@ const AskXiaoTuan = () => {
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || isTyping}
-            className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all disabled:opacity-35"
+            className="shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center transition-all disabled:opacity-30"
             style={{
               background: input.trim() && !isTyping
                 ? "linear-gradient(135deg, hsl(43 100% 50%), hsl(33 95% 52%))"
-                : "hsl(var(--muted))",
-              boxShadow: input.trim() && !isTyping ? "0 2px 8px hsl(43 100% 50% / 0.35)" : "none",
+                : "hsl(220 8% 94%)",
+              boxShadow: input.trim() && !isTyping ? "0 2px 10px hsl(43 100% 50% / 0.4)" : "none",
             }}
           >
-            <Send style={{ width: 16, height: 16, color: input.trim() && !isTyping ? "hsl(30 20% 10%)" : "hsl(var(--muted-foreground))" }} />
+            <Send style={{ width: 16, height: 16, color: input.trim() && !isTyping ? "hsl(30 20% 10%)" : "hsl(220 8% 56%)" }} />
           </button>
         </div>
       </div>
@@ -530,7 +573,7 @@ const AskXiaoTuan = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center"
+            className="fixed inset-0 z-50 flex items-end justify-center pb-14"
             style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
             onClick={() => setShowTemplate(false)}
           >
@@ -540,7 +583,7 @@ const AskXiaoTuan = () => {
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 32 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-card rounded-t-3xl w-full max-w-[430px] max-h-[82vh] overflow-y-auto"
+              className="bg-card rounded-3xl w-full max-w-[430px] mx-3"
               style={{ boxShadow: "var(--shadow-modal)" }}
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
@@ -548,7 +591,7 @@ const AskXiaoTuan = () => {
                   <div className="w-7 h-7 rounded-xl bg-primary/15 flex items-center justify-center">
                     <SlidersHorizontal className="w-3.5 h-3.5 text-amber-700" />
                   </div>
-                  <h3 className="font-bold text-base">快捷填写旅行需求</h3>
+                  <h3 className="font-bold text-base">快捷填写出行需求</h3>
                 </div>
                 <button onClick={() => setShowTemplate(false)} className="w-7 h-7 rounded-full bg-muted flex items-center justify-center hover:bg-secondary transition-colors">
                   <X className="w-4 h-4" />
@@ -559,6 +602,44 @@ const AskXiaoTuan = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Location Selection Page ── */}
+      <AnimatePresence>
+        {showLocationPage && (
+          <LocationPage
+            currentAddress={location.displayName}
+            onBack={() => setShowLocationPage(false)}
+            onSelect={handleLocationSelect}
+            onRelocate={() => {
+              requestGPS();
+              setShowLocationPage(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Location Permission Modal ── */}
+      <AnimatePresence>
+        {showPermissionModal && (
+          <LocationPermissionModal
+            onAllow={handlePermissionAllow}
+            onManual={handlePermissionManual}
+            onDismiss={() => setShowPermissionModal(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── History Sidebar ── */}
+      <HistorySidebar
+        open={showSidebar}
+        onClose={() => setShowSidebar(false)}
+        onSelectChat={(id) => {
+          // TODO: load chat history by id
+          console.log("Select history:", id);
+        }}
+        currentLocationName={location.displayName}
+        onLocationClick={() => { setShowSidebar(false); setShowLocationPage(true); }}
+      />
     </div>
   );
 };

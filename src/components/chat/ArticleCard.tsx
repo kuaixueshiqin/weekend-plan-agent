@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Utensils, Hotel, Clock, CheckCircle, ExternalLink, ChevronDown, ChevronUp, MessageCircle, Sparkles, Navigation, Calendar, Star, Ticket } from "lucide-react";
-import mascotImg from "@/assets/xiaotuan-mascot.png";
+import mascotImg from "@/assets/zhoumoumiao-mascot.png";
 
 interface ArticleCardProps {
   content: string;
@@ -478,7 +478,7 @@ const ArticleCard = ({ content, onSuggestionClick }: ArticleCardProps) => {
           <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-2">
             <span className="flex items-center gap-1.5">
               <img src={mascotImg} alt="" className="w-4 h-4 rounded-full" />
-              小团和你的对话
+              周末喵和你的对话
             </span>
             <span>{dateStr}</span>
           </div>

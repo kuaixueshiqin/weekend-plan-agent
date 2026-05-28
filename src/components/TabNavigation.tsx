@@ -9,8 +9,8 @@ interface TabNavigationProps {
 }
 
 const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "ask",       label: "问小团", icon: MessageCircle },
-  { id: "guides",    label: "攻略",   icon: Compass },
+  { id: "ask",       label: "问小喵", icon: MessageCircle },
+  { id: "guides",    label: "探索",   icon: Compass },
   { id: "itinerary", label: "行程",   icon: Map },
   { id: "profile",   label: "我的",   icon: User },
 ];
@@ -20,10 +20,10 @@ const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) => {
     <nav
       className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-[430px]"
       style={{
-        background: "rgba(255,255,255,0.9)",
+        background: "rgba(255,255,255,0.92)",
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        boxShadow: "0 -1px 0 rgba(0,0,0,0.06), 0 -8px 32px -8px rgba(0,0,0,0.08)",
+        boxShadow: "0 -1px 0 rgba(0,0,0,0.05)",
       }}
     >
       {/* safe area */}

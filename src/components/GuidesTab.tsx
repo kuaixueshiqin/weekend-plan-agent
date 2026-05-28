@@ -21,15 +21,15 @@ interface GuideCard {
 }
 
 const mockGuides: GuideCard[] = [
-  { id: "1", image: hangzhouImg, title: "杭州两天一夜保姆级攻略｜西湖+灵隐寺+龙井茶", author: "旅行小达人", avatar: "🧑‍🎨", likes: 2341, comments: 189, tags: ["杭州", "西湖"], liked: false, saved: false },
-  { id: "2", image: dimsumImg, title: "杭州必吃TOP10美食｜本地人推荐的宝藏店铺", author: "美食探店家", avatar: "👨‍🍳", likes: 1892, comments: 256, tags: ["杭州美食", "本帮菜"], liked: false, saved: false },
-  { id: "3", image: hotelImg, title: "西湖边高性价比酒店合集｜人均200住湖景房", author: "酒店测评师", avatar: "🏨", likes: 3102, comments: 341, tags: ["酒店推荐", "西湖"], liked: false, saved: false },
-  { id: "4", image: nanjingImg, title: "南京三日游完整路线｜中山陵+夫子庙+总统府", author: "历史文化控", avatar: "📚", likes: 1567, comments: 123, tags: ["南京", "历史"], liked: false, saved: false },
-  { id: "5", image: nightmarketImg, title: "上海夜市美食地图｜从城隍庙到南京路全攻略", author: "夜猫子吃货", avatar: "🌙", likes: 2789, comments: 198, tags: ["上海", "夜市"], liked: false, saved: false },
-  { id: "6", image: hangzhouImg, title: "周末逃离计划｜杭州小众打卡地推荐", author: "探秘达人", avatar: "🗺️", likes: 987, comments: 76, tags: ["小众", "杭州"], liked: false, saved: false },
+  { id: "1", image: hangzhouImg, title: "亲子乐园半日游｜孩子狂欢的遛娃玩法大公开", author: "妈妈爱探索", avatar: "👩‍👧", likes: 3218, comments: 245, tags: ["亲子", "乐园"], liked: false, saved: false },
+  { id: "2", image: dimsumImg, title: "周末轻食餐厅合集｜老婆说好吃的健康餐厅全推荐", author: "美食探店家", avatar: "👨‍🍳", likes: 1892, comments: 256, tags: ["轻食", "健康"], liked: false, saved: false },
+  { id: "3", image: hotelImg, title: "下午茶好去处合集｜环境格调高+美味平价高分", author: "和闺蜜下午茶", avatar: "☕", likes: 2567, comments: 198, tags: ["下午茶", "休闲"], liked: false, saved: false },
+  { id: "4", image: nanjingImg, title: "城市公园漫步指南｜附近免费好去处整理", author: "漫步达人", avatar: "🌿", likes: 1567, comments: 123, tags: ["公园", "户外"], liked: false, saved: false },
+  { id: "5", image: nightmarketImg, title: "家庭聚餐餐厅推荐｜全家人都喜欢的宝藏补贴餐厅", author: "家庭大厨", avatar: "🏠", likes: 2789, comments: 198, tags: ["家庭", "美食"], liked: false, saved: false },
+  { id: "6", image: hangzhouImg, title: "本地网红打卡地｜周末说走就走的小众新地标", author: "探秘达人", avatar: "🗺️", likes: 987, comments: 76, tags: ["打卡", "小众"], liked: false, saved: false },
 ];
 
-const filters = ["全部", "杭州", "南京", "上海", "北京", "成都", "重庆", "西安", "厦门"];
+const filters = ["全部", "亲子", "美食", "户外", "休闲", "购物", "文化", "夜生活"];
 
 const GuidesTab = () => {
   const [guides, setGuides] = useState(mockGuides);
@@ -75,9 +75,9 @@ const GuidesTab = () => {
         {/* Title row */}
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h1 className="text-[20px] font-bold tracking-tight">旅行攻略</h1>
+            <h1 className="text-[20px] font-bold tracking-tight">本地探索</h1>
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> 今日热门更新
+              <TrendingUp className="w-3 h-3" /> 附近好玩好吃推荐
             </p>
           </div>
           <div className="w-9 h-9 rounded-2xl bg-primary/12 flex items-center justify-center">
@@ -92,7 +92,7 @@ const GuidesTab = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索攻略、目的地、美食..."
+            placeholder="搜索附近景点、餐厅、亲子..."
             className="w-full h-10 pl-10 pr-10 rounded-2xl bg-card border border-border/60 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/30 transition-all"
             style={{ boxShadow: "var(--shadow-card)" }}
           />
@@ -137,7 +137,7 @@ const GuidesTab = () => {
         {filteredGuides.length === 0 && (
           <div className="text-center py-16">
             <div className="text-4xl mb-3">🗺️</div>
-            <p className="text-muted-foreground text-sm font-medium">没有找到相关攻略</p>
+            <p className="text-muted-foreground text-sm font-medium">没有找到相关内容</p>
             <button onClick={() => { setSearchQuery(""); setActiveFilter("全部"); }} className="mt-3 text-xs text-primary font-semibold">清空筛选</button>
           </div>
         )}
@@ -249,7 +249,7 @@ const GuidesTab = () => {
                 </div>
 
                 <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                  这是一篇精心准备的旅行攻略，包含了详细的路线规划、美食推荐和住宿建议。所有提到的景点和餐厅都可以在美团上直接预订，享受团购优惠！
+                  这是一份本地探索指南，包含了精选地点、美食推荐和出行小贴士。所有提到的地点都可以在美团上直接预订，享受团购优惠！
                 </p>
 
                 {/* Resources */}

@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex justify-center">
       <div className="w-full max-w-[430px] min-h-screen bg-background relative shadow-xl">
-        <main className="pb-14 overflow-y-auto" style={{ height: "100vh" }}>
+        <main className="pb-28 overflow-y-auto" style={{ height: "100vh" }}>
           {activeTab === "ask" && <AskXiaoTuan />}
           {activeTab === "guides" && <GuidesTab />}
           {activeTab === "itinerary" && <ItineraryTab />}

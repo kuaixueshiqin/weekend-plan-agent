@@ -35,28 +35,18 @@ interface Trip {
 const mockTrips: Trip[] = [
   {
     id: "1",
-    title: "杭州2天1夜之旅",
-    dates: "4月5日 - 4月6日",
+    title: "周末下午亲子半日游",
+    dates: "今天下午",
     active: true,
     favorited: false,
     days: [
       {
-        day: 1, date: "4月5日", period: "周六",
+        day: 1, date: "周六下午", period: "半日游",
         items: [
-          { id: "1", time: "09:00", name: "西湖风景区", type: "scenic", description: "漫步苏堤，赏断桥残雪", price: "免费", status: "completed" },
-          { id: "2", time: "12:00", name: "楼外楼", type: "food", description: "西湖醋鱼、龙井虾仁双人套餐", price: "¥198", status: "completed", code: "MT20250405-8832" },
-          { id: "3", time: "14:00", name: "灵隐寺", type: "scenic", description: "千年古刹，飞来峰石窟", price: "¥75", status: "pending", code: "MT20250405-7721" },
-          { id: "4", time: "18:00", name: "河坊街夜市", type: "food", description: "定胜糕、葱包桧等地道小吃", price: "人均¥50", status: "unbooked" },
-          { id: "5", time: "20:00", name: "西湖亚朵酒店", type: "hotel", description: "西湖步行5分钟，含双早", price: "¥458", status: "unbooked" },
-        ],
-      },
-      {
-        day: 2, date: "4月6日", period: "周日",
-        items: [
-          { id: "6", time: "09:00", name: "龙井茶园", type: "scenic", description: "采茶制茶体验", price: "¥120", status: "unbooked" },
-          { id: "7", time: "12:00", name: "知味观·总店", type: "food", description: "小笼包、猫耳朵", price: "人均¥85", status: "unbooked" },
-          { id: "8", time: "14:00", name: "宋城景区", type: "scenic", description: "宋城千古情演出", price: "¥280", status: "unbooked" },
-          { id: "9", time: "18:00", name: "外婆家·西湖店", type: "food", description: "茶香鸡、杭帮菜", price: "人均¥75", status: "expired" },
+          { id: "1", time: "14:00", name: "星光亲子乐园", type: "scenic", description: "室内乐园，小滑梯跨路迎天都有", price: "¥128/人", status: "completed", code: "MT20250501-3321" },
+          { id: "2", time: "16:30", name: "世纪金源购物中心", type: "scenic", description: "逛潮流，送孩子打卡拍照", price: "免费", status: "completed" },
+          { id: "3", time: "17:30", name: "绿茶山轻食餐厅", type: "food", description: "健康沙拉、鸡辛汤面，老婆最爱的减脂小馆", price: "人均¥68", status: "pending", code: "MT20250501-8819" },
+          { id: "4", time: "19:00", name: "奠江十街天天奶茶", type: "food", description: "芹果塔小雏、秘芷小料心等网红饮品", price: "人均¥28", status: "unbooked" },
         ],
       },
     ],
@@ -66,16 +56,16 @@ const mockTrips: Trip[] = [
 const mockFavorites: Trip[] = [
   {
     id: "f1",
-    title: "上海3日购物之旅",
-    dates: "3月15日 - 3月17日",
+    title: "上周末亲子游方案",
+    dates: "周六下午，共3小时",
     active: false,
     favorited: true,
     days: [],
   },
   {
     id: "f2",
-    title: "南京2日历史文化游",
-    dates: "2月20日 - 2月21日",
+    title: "朋友聚会包吹方案",
+    dates: "周日下午，共4人",
     active: false,
     favorited: true,
     days: [],
@@ -204,7 +194,7 @@ const ItineraryTab = () => {
           <div>
             <h2 className="text-[20px] font-bold tracking-tight">{activeTrip?.title || "我的行程"}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {activeTrip ? `${activeTrip.dates} · ${activeTrip.days.length}天${activeTrip.days.length - 1}夜` : "暂无行程"}
+              {activeTrip ? `${activeTrip.dates} · ${activeTrip.days.length}个行程段` : "暂无行程"}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -263,7 +253,7 @@ const ItineraryTab = () => {
             }}
           >
             <ShoppingCart className="w-4 h-4" />
-            一键预定全部（{unbookedCount}项未预定）
+            一键安排（{unbookedCount}项待预定）
           </button>
         )}
 
@@ -275,7 +265,7 @@ const ItineraryTab = () => {
           >
             <div className="flex items-center justify-between mb-2.5">
               <span className="text-xs font-semibold text-muted-foreground">行程进度</span>
-              <span className="text-xs font-bold text-meituan-green">2/9 已完成</span>
+              <span className="text-xs font-bold text-meituan-green">已安排 2/4</span>
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <motion.div
@@ -497,7 +487,7 @@ const ItineraryTab = () => {
                         className="flex-1 py-3 rounded-2xl font-bold text-sm text-amber-900 transition-all"
                         style={{ background: "linear-gradient(135deg, hsl(43 100% 50%), hsl(33 95% 52%))", boxShadow: "0 3px 12px hsl(43 100% 50% / 0.3)" }}
                       >
-                        {selectedItem.code ? "去核销" : "立即购买"}
+                        {selectedItem.code ? "出示凭证" : "立即购买"}
                       </button>
                       <button className="px-5 py-3 bg-muted rounded-2xl font-bold text-sm hover:bg-secondary transition-colors">导航</button>
                     </>

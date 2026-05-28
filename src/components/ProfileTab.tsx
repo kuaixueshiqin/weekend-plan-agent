@@ -2,9 +2,9 @@ import { MapPin, Ticket, Heart, Settings, ChevronRight, Trophy, Compass, Star, T
 import { motion } from "framer-motion";
 
 const stats = [
-  { label: "去过城市", value: "12", icon: MapPin, color: "text-meituan-blue", bg: "bg-meituan-blue/10" },
-  { label: "打卡景点", value: "38", icon: Compass, color: "text-meituan-orange", bg: "bg-meituan-orange/10" },
-  { label: "旅行天数", value: "56", icon: Trophy, color: "text-primary", bg: "bg-primary/10" },
+  { label: "探索城市", value: "12", icon: MapPin, color: "text-meituan-blue", bg: "bg-meituan-blue/10" },
+  { label: "打卡地点", value: "38", icon: Compass, color: "text-meituan-orange", bg: "bg-meituan-orange/10" },
+  { label: "出行天数", value: "56", icon: Trophy, color: "text-primary", bg: "bg-primary/10" },
 ];
 
 const cities = [
@@ -15,13 +15,13 @@ const cities = [
 ];
 
 const orders = [
-  { name: "灵隐寺门票", status: "待核销", price: "¥75", statusColor: "text-meituan-orange", dot: "bg-meituan-orange" },
-  { name: "楼外楼双人套餐", status: "已核销", price: "¥198", statusColor: "text-meituan-green", dot: "bg-meituan-green" },
-  { name: "宋城千古情", status: "待核销", price: "¥280", statusColor: "text-meituan-orange", dot: "bg-meituan-orange" },
+  { name: "星光亲子乐园门票", status: "已核销", price: "¥128", statusColor: "text-meituan-green", dot: "bg-meituan-green" },
+  { name: "绿茶山轻食套餐", status: "待核销", price: "¥68", statusColor: "text-meituan-orange", dot: "bg-meituan-orange" },
+  { name: "天天奶茶团购券", status: "待核销", price: "¥28", statusColor: "text-meituan-orange", dot: "bg-meituan-orange" },
 ];
 
 const menuItems = [
-  { label: "收藏的攻略", icon: Heart, count: "23", color: "text-red-500", bg: "bg-red-50" },
+  { label: "收藏的地点", icon: Heart, count: "23", color: "text-red-500", bg: "bg-red-50" },
   { label: "我的订单", icon: Ticket, count: "8", color: "text-meituan-blue", bg: "bg-meituan-blue/10" },
   { label: "行程提醒设置", icon: Settings, color: "text-muted-foreground", bg: "bg-muted" },
 ];
@@ -62,7 +62,7 @@ const ProfileTab = () => {
           </div>
 
           <div className="flex-1">
-            <h2 className="text-[18px] font-bold tracking-tight">旅行达人小明</h2>
+            <h2 className="text-[18px] font-bold tracking-tight">周末探索者</h2>
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-meituan-green inline-block" />
               已绑定美团账号
@@ -177,8 +177,8 @@ const ProfileTab = () => {
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <p className="font-bold text-white text-sm">生成我的旅行报告</p>
-                <p className="text-white/75 text-xs mt-0.5">查看年度足迹与偏好分析</p>
+                <p className="font-bold text-white text-sm">查看我的出行报告</p>
+                <p className="text-white/75 text-xs mt-0.5">了解你的本地探索偏好</p>
               </div>
               <ChevronRight className="w-5 h-5 text-white/80" />
             </div>
