@@ -92,7 +92,7 @@ const LocationPage = ({ currentAddress, onBack, onSelect, onRelocate }: Location
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", stiffness: 340, damping: 34 }}
-      className="fixed inset-0 z-[60] bg-background flex flex-col max-w-[430px] mx-auto left-1/2 -translate-x-1/2"
+      className="fixed inset-0 z-[60] bg-background flex flex-col max-w-[430px] mx-auto"
       style={{ boxShadow: "0 0 40px rgba(0,0,0,0.12)" }}
     >
       {/* ── Header ── */}

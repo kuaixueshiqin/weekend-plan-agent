@@ -23,7 +23,7 @@ const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) => {
         background: "rgba(255,255,255,0.92)",
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        boxShadow: "0 -1px 0 rgba(0,0,0,0.05)",
+        boxShadow: activeTab === "ask" ? "none" : "0 -1px 0 rgba(0,0,0,0.08)",
       }}
     >
       {/* safe area */}

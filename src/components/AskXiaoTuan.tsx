@@ -103,7 +103,13 @@ function parseItinerary(text: string): { days: DayPlan[]; routePoints: MapPoint[
   return days.length > 0 ? { days, routePoints, nearbyPoints } : null;
 }
 
-const AskXiaoTuan = () => {
+interface AskXiaoTuanProps {
+  showSidebar: boolean;
+  onSidebarChange: (v: boolean) => void;
+}
+
+const AskXiaoTuan = ({ showSidebar, onSidebarChange }: AskXiaoTuanProps) => {
+  const setShowSidebar = onSidebarChange;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -116,14 +122,6 @@ const AskXiaoTuan = () => {
   const { location, requestGPS, selectAddress } = useLocation();
   const [showLocationPage, setShowLocationPage] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-
-  // Show permission modal when GPS is denied and no address selected
-  useEffect(() => {
-    if (location.status === "denied" && !location.fullAddress) {
-      setShowPermissionModal(true);
-    }
-  }, [location.status, location.fullAddress]);
 
   const suggestions = [
     "今天下午带5岁孩子出去玩，别太远，2-3小时",
@@ -139,6 +137,13 @@ const AskXiaoTuan = () => {
   const handleSend = async (text?: string) => {
     let msg = text || input.trim();
     if (!msg || isTyping) return;
+
+    // If no location set, prompt user to set it first
+    const hasLocation = location.status === "located" || location.status === "manual" || !!location.fullAddress;
+    if (!hasLocation) {
+      setShowPermissionModal(true);
+      return;
+    }
 
     // Append date if selected
     if (travelDate) {
@@ -325,15 +330,6 @@ const AskXiaoTuan = () => {
           </div>
         </div>
 
-        {/* Right: search + settings */}
-        <div className="flex items-center gap-1.5 shrink-0 ml-2">
-          <button className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-secondary transition-colors">
-            <Search className="w-[18px] h-[18px] text-foreground/70" />
-          </button>
-          <button className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-secondary transition-colors">
-            <Settings className="w-[18px] h-[18px] text-foreground/70" />
-          </button>
-        </div>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide">

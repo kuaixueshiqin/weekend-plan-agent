@@ -1,17 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Menu, X, Search, Settings, Plus,
-  MessageSquare, Clock, ChevronRight,
+  Menu, Search, Plus, ChevronRight,
 } from "lucide-react";
 
 // ── Mock history data (按时间分组)
-interface HistoryItem {
-  id: string;
-  title: string;
-  time?: string;       // relative time label
-}
-
 const HISTORY_GROUPS = [
   {
     label: "今天",
@@ -55,6 +48,9 @@ interface HistorySidebarProps {
   onLocationClick: () => void;
 }
 
+// 侧栏宽度（与元宝一致，约占屏幕 78%）
+const SIDEBAR_WIDTH = "min(320px, 78vw)";
+
 const HistorySidebar = ({
   open,
   onClose,
@@ -78,25 +74,14 @@ const HistorySidebar = ({
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[55]"
-            style={{ background: "rgba(0,0,0,0.3)" }}
-            onClick={onClose}
-          />
-
-          {/* Sidebar panel */}
+          {/* ── Sidebar panel — fixed left, pushes main content right ── */}
           <motion.div
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
-            transition={{ type: "spring", stiffness: 340, damping: 34 }}
-            className="fixed top-0 left-1/2 -translate-x-1/2 z-[60] h-full w-full max-w-[430px] bg-background flex flex-col"
-            style={{ boxShadow: "8px 0 32px rgba(0,0,0,0.12)" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed top-0 left-0 z-[70] h-full bg-background flex flex-col shadow-2xl"
+            style={{ width: SIDEBAR_WIDTH }}
           >
             {/* ── Header ── */}
             <div
@@ -120,31 +105,15 @@ const HistorySidebar = ({
                   onClick={onLocationClick}
                   className="flex items-center gap-1 mt-0.5 group w-fit"
                 >
-                  <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[180px]">
+                  <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[160px]">
                     {currentLocationName || "选择位置"}
                   </span>
                   <ChevronRight className="w-3 h-3 text-muted-foreground" />
                 </button>
               </div>
-
-              {/* Right: actions */}
-              <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                <button
-                  className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-secondary transition-colors"
-                  aria-label="搜索"
-                >
-                  <Search className="w-4.5 h-4.5 text-foreground/70" />
-                </button>
-                <button
-                  className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-secondary transition-colors"
-                  aria-label="设置"
-                >
-                  <Settings className="w-4.5 h-4.5 text-foreground/70" />
-                </button>
-              </div>
             </div>
 
-            {/* ── Search bar (inside sidebar) ── */}
+            {/* ── Search bar ── */}
             <div className="shrink-0 px-4 py-3 border-b border-border/40">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
@@ -211,6 +180,20 @@ const HistorySidebar = ({
               </button>
             </div>
           </motion.div>
+
+          {/* ── Backdrop overlay on the remaining area (right side) ── */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[65]"
+            style={{
+              background: "rgba(0,0,0,0.15)",
+              // 遮罩只覆盖侧栏右侧区域（通过 pointer-events 让点击关闭）
+            }}
+            onClick={onClose}
+          />
         </>
       )}
     </AnimatePresence>
